@@ -22,7 +22,7 @@
 
 
 char *strMemCopy(char *src) {
-    char *target = malloc(strlen(src) * sizeof(char));
+    char *target = malloc(strlen(src) * sizeof(char) + 1);
     strcpy(target, src);
     
     return target;
@@ -59,13 +59,11 @@ char **parseFileArg(char *inputString, int *cnt) {
 
 
 int constructFilePath(char *dirLocation, char *fileName, char **filePath) { 
-    fprintf(stderr,"CFP\n");
     int pathCharNum = strlen(fileName) + 1; // For the \0
     if (dirLocation != NULL) {
         pathCharNum += strlen(dirLocation); 
         pathCharNum++;// For the '/'
     }
-    fprintf(stderr,"CFP%d\n", pathCharNum);
     (*filePath) = malloc(sizeof(char) * pathCharNum);
 
     int v = 0;
@@ -74,7 +72,6 @@ int constructFilePath(char *dirLocation, char *fileName, char **filePath) {
     else
         v = sprintf(*filePath, "%s/%s", dirLocation, fileName);
 
-    fprintf(stderr,"CFP%s\n", *filePath);
     return v;
 }
 
@@ -153,30 +150,30 @@ int main (int argc, char *argv[]) {
     setPrint(mainSet);
     free(filePath);
     for (int s = 1; s < inCnt; s++) {
-        n = constructFilePath(fileLocation, includedFileList[s], &filePath);
+        n = constructFilePath(fileLocation, includedFileList[s], &filePath);    
+#ifdef DEBUG
         printf("Reading in file[%d] :%s\n", s, filePath);
-        otherSet  = newSetFromFile(filePath);
+#endif  
+        otherSet  = newSetFromFile(filePath);      
+#ifdef DEBUG
+        setPrint(otherSet);
+#endif    
        // setPrint(otherSet);
         bufferSet = setIntersect(mainSet, otherSet);
-#ifdef DEBUG
-        printf("Size of intersect BUFFER Set: %d\n", bufferSet->size);
-#endif
         moveSet(bufferSet, mainSet);
-#ifdef DEBUG
-        printf("Size of intersect COPIED FROM BUFFER TO MAIN Set: %d\n", mainSet->size);
-#endif
         free(filePath);
-
-        printf("Going out (%d items)\n", mainSet->size);
+        
 #ifdef DEBUG
-        printf("Size of intersect GOINGOUT: %d\n", mainSet->size);
+        printf("Current intersection set\n");
+        setPrint(mainSet);
 #endif
     }
 
-printf("ALL INTERSECT COMP DONE (%d items)\n", mainSet->size);
 #ifdef DEBUG
-    setPrint(mainSet);
-#endif    
+        printf("Final intersection set\n");
+        setPrint(mainSet);
+#endif   
+
     for (int s = 0; s < notInCnt; s++) {
         printf("NOTIN %d :%s\n", s, notIncludedFileList[s]);
         n = constructFilePath(fileLocation, notIncludedFileList[s], &filePath);

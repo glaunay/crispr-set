@@ -1,8 +1,13 @@
-#include "custom_set.h"
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+
+#include "custom_set.h"
+
 
 int dichotomicSearch(uint64_t *list, int listLength, uint64_t value) {
     int x = listLength / 2;
@@ -18,7 +23,7 @@ int dichotomicSearch(uint64_t *list, int listLength, uint64_t value) {
 
     while (hi_x - lo_x > 1) {
 #ifdef DEBUG
-        printf("Looking at %lld[%d]\n", list[x], x);
+        printf("Looking at %lu[%d]\n", list[x], x);
 #endif        
         if (list[x] == value) {
 #ifdef DEBUG
@@ -71,11 +76,12 @@ int dichotomicSearch(uint64_t *list, int listLength, uint64_t value) {
 
 void moveSet(integerSet_t *sourceSet, integerSet_t *targetSet ) {
     targetSet->size = sourceSet->size;
-    free(targetSet->data);
+    if (targetSet->data != NULL)
+        free(targetSet->data);
     targetSet->data = sourceSet->data;
     
     sourceSet->data = NULL;
-    free(targetSet);
+    free(sourceSet);
 }
 
 // Susbtract FROM the iSet the elements also found in jSet
@@ -88,7 +94,7 @@ integerSet_t *setSubstract(integerSet_t *iSet, integerSet_t *jSet) {
 
     for (i = 0; i < iSet->size ; i++) {
 #ifdef DEBUG
-        printf("LF: %lld\n", iSet->data[i]);
+        printf("LF: %lu\n", iSet->data[i]);
 #endif
         if (dichotomicSearch(jSet->data, jSet->size, iSet->data[i]) == -1 ) {
             subSet->data[subSet->size] = iSet->data[i];
@@ -112,7 +118,7 @@ integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet) {
 
     for (i = 0; i < iSet->size ; i++) {
 #ifdef DEBUG
-        printf("LF: %lld\n", iSet->data[i]);
+        printf("LF: %lu\n", iSet->data[i]);
 #endif
         if (dichotomicSearch(jSet->data, jSet->size, iSet->data[i]) > -1 ) {
             interSet->data[interSet->size] = iSet->data[i];
@@ -133,7 +139,7 @@ void setPrint(integerSet_t *set) {
     printf("# %d items set\n", set->size);
 
     for (x = 0; x < set->size; x++) {
-        printf("%lld", set->data[x]);
+        printf("%lu", set->data[x]);
         if (x < set->size - 1)
             printf(",");
     }
@@ -150,7 +156,7 @@ integerSet_t *newSetFromFile(char *filePath) {
     FILE *fp = NULL;
     char * line = NULL;
     size_t len = 0;
-    ssize_t read;
+    size_t read;
 
     integerSet_t *newSet = malloc(sizeof(integerSet_t));
     newSet->size = -1;
@@ -162,7 +168,7 @@ integerSet_t *newSetFromFile(char *filePath) {
     int dataIndex = 0;
     while ((read = getline(&line, &len, fp)) != -1) {
         //printf("Retrieved line of length %zu:\n", read);
-        sscanf (line, "%lld", &cValue);
+        sscanf (line, "%lu", &cValue);
         if(newSet->size < 0) {
             newSet->size = cValue;
             newSet->data = malloc(newSet->size * sizeof(uint64_t));
