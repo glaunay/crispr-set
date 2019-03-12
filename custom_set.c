@@ -23,7 +23,7 @@ int dichotomicSearch(uint64_t *list, int listLength, uint64_t value) {
 
     while (hi_x - lo_x > 1) {
 #ifdef DEBUG
-        printf("Looking at %lu[%d]\n", list[x], x);
+        printf("Looking at %llu[%d]\n", list[x], x);
 #endif        
         if (list[x] == value) {
 #ifdef DEBUG
@@ -94,7 +94,7 @@ integerSet_t *setSubstract(integerSet_t *iSet, integerSet_t *jSet) {
 
     for (i = 0; i < iSet->size ; i++) {
 #ifdef DEBUG
-        printf("LF: %lu\n", iSet->data[i]);
+        printf("LF: %llu\n", iSet->data[i]);
 #endif
         if (dichotomicSearch(jSet->data, jSet->size, iSet->data[i]) == -1 ) {
             subSet->data[subSet->size] = iSet->data[i];
@@ -118,7 +118,7 @@ integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet) {
 
     for (i = 0; i < iSet->size ; i++) {
 #ifdef DEBUG
-        printf("LF: %lu\n", iSet->data[i]);
+        printf("LF: %llu\n", iSet->data[i]);
 #endif
         if (dichotomicSearch(jSet->data, jSet->size, iSet->data[i]) > -1 ) {
             interSet->data[interSet->size] = iSet->data[i];
@@ -139,7 +139,7 @@ void setPrint(integerSet_t *set) {
     printf("# %d items set\n", set->size);
 
     for (x = 0; x < set->size; x++) {
-        printf("%lu", set->data[x]);
+        printf("%llu", set->data[x]);
         if (x < set->size - 1)
             printf(",");
     }
@@ -168,7 +168,7 @@ integerSet_t *newSetFromFile(char *filePath) {
     int dataIndex = 0;
     while ((read = getline(&line, &len, fp)) != -1) {
         //printf("Retrieved line of length %zu:\n", read);
-        sscanf (line, "%lu", &cValue);
+        sscanf (line, "%llu", &cValue);
         if(newSet->size < 0) {
             newSet->size = cValue;
             newSet->data = malloc(newSet->size * sizeof(uint64_t));
