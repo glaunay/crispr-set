@@ -162,8 +162,10 @@ integerSet_t *newSetFromFile(char *filePath) {
     newSet->size = -1;
 
     fp = fopen(filePath, "r");
-    if (fp == NULL)
+    if (fp == NULL) {
+        fprintf(stderr, "Error, can't open%s\n", filePath);
         exit(1);
+    }
     uint64_t cValue;
     int dataIndex = 0;
     while ((read = getline(&line, &len, fp)) != -1) {

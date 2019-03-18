@@ -30,7 +30,7 @@ char *strMemCopy(char *src) {
 
 char **parseFileArg(char *inputString, int *cnt) {
     char **resultList = NULL;  
-    const char s[2] = ",";    
+    const char s[2] = "&";    
     char *token;
     
     char *cpyInputStr = strMemCopy(inputString);
@@ -58,20 +58,29 @@ char **parseFileArg(char *inputString, int *cnt) {
 }
 
 
-int constructFilePath(char *dirLocation, char *fileName, char **filePath) { 
+int constructFilePath(char *dirLocation, char *fileName, char *fileExtension, char **filePath) { 
     int pathCharNum = strlen(fileName) + 1; // For the \0
     if (dirLocation != NULL) {
         pathCharNum += strlen(dirLocation); 
         pathCharNum++;// For the '/'
     }
+    if(fileExtension != NULL)
+        pathCharNum += strlen(fileExtension);
+        
     (*filePath) = malloc(sizeof(char) * pathCharNum);
 
     int v = 0;
-    if (dirLocation == NULL) 
-        v = sprintf(*filePath, "%s", fileName);
-    else
-        v = sprintf(*filePath, "%s/%s", dirLocation, fileName);
-
+    if (fileExtension == NULL) {
+        if (dirLocation == NULL) 
+            v = sprintf(*filePath, "%s", fileName);
+        else
+            v = sprintf(*filePath, "%s/%s", dirLocation, fileName);
+    } else {
+        if (dirLocation == NULL) 
+            v = sprintf(*filePath, "%s.%s", fileName, fileExtension);
+        else
+            v = sprintf(*filePath, "%s/%s.%s", dirLocation, fileName, fileExtension);
+    }
     return v;
 }
 
@@ -93,7 +102,8 @@ int main (int argc, char *argv[]) {
     
     char *fileLocation = NULL;
     char *filePath = NULL; 
-    const char    *short_opt = "hi:o:l:v:";
+    char *fileExtension = NULL; 
+    const char    *short_opt = "hi:o:l:v:e:";
     struct option   long_opt[] =
     {
         {"help",               no_argument, NULL, 'h'},
@@ -101,6 +111,7 @@ int main (int argc, char *argv[]) {
         {"notin",          required_argument, NULL, 'o'},
         {"loc",          required_argument, NULL, 'l'},
         {"val",          required_argument, NULL, 'v'},
+        {"ext",          required_argument, NULL, 'e'},
         {NULL,            0,                NULL, 0  }
     };
 
@@ -123,6 +134,9 @@ int main (int argc, char *argv[]) {
             case 'l':
                 fileLocation = strdup(optarg);
                 break;
+            case 'e':
+                fileExtension = strdup(optarg);
+                break;
             case 'h':
                 printf("Performing comparaison ensemble on set of intefger keys");
                 printf("-h, --help                print this help and exit\n");
@@ -140,9 +154,9 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    printf("Files IN number %d in\n", inCnt);
+    printf("Input [in] files number %d\n", inCnt);
 
-    n = constructFilePath(fileLocation, includedFileList[0], &filePath);
+    n = constructFilePath(fileLocation, includedFileList[0], fileExtension, &filePath);
     printf("Starting set from file::%s\n", filePath);
 
     integerSet_t *mainSet = newSetFromFile(filePath);
@@ -150,9 +164,9 @@ int main (int argc, char *argv[]) {
     setPrint(mainSet);
     free(filePath);
     for (int s = 1; s < inCnt; s++) {
-        n = constructFilePath(fileLocation, includedFileList[s], &filePath);    
+        n = constructFilePath(fileLocation, includedFileList[s], fileExtension, &filePath);    
 #ifdef DEBUG
-        printf("Reading in file[%d] :%s\n", s, filePath);
+        printf("[in] Reading file[%d] :%s\n", s, filePath);
 #endif  
         otherSet  = newSetFromFile(filePath);      
 #ifdef DEBUG
@@ -174,10 +188,12 @@ int main (int argc, char *argv[]) {
         setPrint(mainSet);
 #endif   
 
+    printf("Input [notin] files number %d\n", notInCnt);
     for (int s = 0; s < notInCnt; s++) {
-        printf("NOTIN %d :%s\n", s, notIncludedFileList[s]);
-        n = constructFilePath(fileLocation, notIncludedFileList[s], &filePath);
-        
+        n = constructFilePath(fileLocation, notIncludedFileList[s], fileExtension, &filePath);
+#ifdef DEBUG
+        printf("[notin] Reading file[%d] :%s\n", s, filePath);
+#endif  
         otherSet  = newSetFromFile(filePath);
        // setPrint(otherSet);
         bufferSet = setSubstract(mainSet, otherSet);
@@ -185,7 +201,7 @@ int main (int argc, char *argv[]) {
         free(filePath);
     }
 
-    printf("ALL SUBSTRACT COMP DONE");
+    printf("Final set (Intersect of %d sets) - (Union of %d sets)\n", inCnt, notInCnt);
     setPrint(mainSet);
 
 /*
