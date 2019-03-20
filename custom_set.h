@@ -9,7 +9,7 @@ typedef struct {
 
 
 integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet);
-void setPrint(integerSet_t *set);
+void setPrint(integerSet_t *set, FILE *stream );
 integerSet_t *destroySet(integerSet_t *set);
 integerSet_t *newSetFromFile(char *filePath);
 void moveSet(integerSet_t *sourceSet, integerSet_t *targetSet );

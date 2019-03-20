@@ -134,16 +134,17 @@ integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet) {
     return interSet;
 }
 
-void setPrint(integerSet_t *set) {
+void setPrint(integerSet_t *set, FILE *stream ) {
     int x;
-    printf("# %d items set\n", set->size);
+    
+    fprintf(stream, "# %d items set\n", set->size);
 
     for (x = 0; x < set->size; x++) {
-        printf("%llu", set->data[x]);
+        fprintf(stream, "%llu", set->data[x]);
         if (x < set->size - 1)
-            printf(",");
+            fprintf(stream, ",");
     }
-    printf("\n");
+    fprintf(stream, "\n");
 }
 
 integerSet_t *destroySet(integerSet_t *set) {

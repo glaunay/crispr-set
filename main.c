@@ -59,7 +59,7 @@ char **parseFileArg(char *inputString, int *cnt) {
 
 
 int constructFilePath(char *dirLocation, char *fileName, char *fileExtension, char **filePath) { 
-    int pathCharNum = strlen(fileName) + 1; // For the \0
+    int pathCharNum = strlen(fileName) + 2; // For the \0
     if (dirLocation != NULL) {
         pathCharNum += strlen(dirLocation); 
         pathCharNum++;// For the '/'
@@ -103,7 +103,9 @@ int main (int argc, char *argv[]) {
     char *fileLocation = NULL;
     char *filePath = NULL; 
     char *fileExtension = NULL; 
-    const char    *short_opt = "hi:o:l:v:e:";
+    char *fileOut = NULL;
+    FILE *fpOut = NULL;
+    const char    *short_opt = "hi:o:l:v:e:f:";
     struct option   long_opt[] =
     {
         {"help",               no_argument, NULL, 'h'},
@@ -137,6 +139,9 @@ int main (int argc, char *argv[]) {
             case 'e':
                 fileExtension = strdup(optarg);
                 break;
+            case 'f':
+                fileOut = strdup(optarg);
+                break;
             case 'h':
                 printf("Performing comparaison ensemble on set of intefger keys");
                 printf("-h, --help                print this help and exit\n");
@@ -154,15 +159,24 @@ int main (int argc, char *argv[]) {
         }
     }
 
+#ifdef DEBUG
     printf("Input [in] files number %d\n", inCnt);
+#endif
 
     n = constructFilePath(fileLocation, includedFileList[0], fileExtension, &filePath);
+
+#ifdef DEBUG
     printf("Starting set from file::%s\n", filePath);
+#endif
 
     integerSet_t *mainSet = newSetFromFile(filePath);
-    integerSet_t *otherSet, *bufferSet;
-    setPrint(mainSet);
     free(filePath);
+
+#ifdef DEBUG
+     setPrint(mainSet, stdout);
+#endif
+
+    integerSet_t *otherSet, *bufferSet;
     for (int s = 1; s < inCnt; s++) {
         n = constructFilePath(fileLocation, includedFileList[s], fileExtension, &filePath);    
 #ifdef DEBUG
@@ -170,40 +184,52 @@ int main (int argc, char *argv[]) {
 #endif  
         otherSet  = newSetFromFile(filePath);      
 #ifdef DEBUG
-        setPrint(otherSet);
+         setPrint(mainSet, stdout);
 #endif    
-       // setPrint(otherSet);
         bufferSet = setIntersect(mainSet, otherSet);
         moveSet(bufferSet, mainSet);
         free(filePath);
         
 #ifdef DEBUG
         printf("Current intersection set\n");
-        setPrint(mainSet);
+         setPrint(mainSet, stdout);
 #endif
+        if(mainSet->size == 0) {
+            fprintf(stderr, "intersect size is zero, early exit\n");
+            break;
+        }
+        
     }
 
 #ifdef DEBUG
         printf("Final intersection set\n");
-        setPrint(mainSet);
+        setPrint(mainSet, stdout);
 #endif   
 
     printf("Input [notin] files number %d\n", notInCnt);
     for (int s = 0; s < notInCnt; s++) {
+        if(mainSet->size == 0){
+            fprintf(stderr, "remaining size is zero, early exit substraction\n");
+            break;
+        }
+            
+
         n = constructFilePath(fileLocation, notIncludedFileList[s], fileExtension, &filePath);
 #ifdef DEBUG
         printf("[notin] Reading file[%d] :%s\n", s, filePath);
 #endif  
         otherSet  = newSetFromFile(filePath);
-       // setPrint(otherSet);
         bufferSet = setSubstract(mainSet, otherSet);
         moveSet(bufferSet, mainSet);
         free(filePath);
     }
 
-    printf("Final set (Intersect of %d sets) - (Union of %d sets)\n", inCnt, notInCnt);
-    setPrint(mainSet);
+   
 
+    fpOut = fopen(fileOut, "w");
+    fprintf(fpOut, "Final set (Intersect of %d sets) - (Union of %d sets)\n", inCnt, notInCnt);
+    setPrint(mainSet, fpOut);
+    fclose(fpOut);
 /*
     int32_t list[11] = { 2,5, 7, 8, 10, 15, 22, 89, 333, 100002, 69022343222 };
     int32_t list2[11] = { 0, 5, 7, 22, 104, 333};
