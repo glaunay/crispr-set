@@ -188,6 +188,7 @@ int main (int argc, char *argv[]) {
          setPrint(mainSet, stdout);
 #endif    
         bufferSet = setIntersect(mainSet, otherSet);
+        otherSet = destroySet(otherSet);        
         moveSet(bufferSet, mainSet);
         free(filePath);
         
