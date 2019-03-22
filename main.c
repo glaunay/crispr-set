@@ -188,8 +188,8 @@ int main (int argc, char *argv[]) {
          setPrint(mainSet, stdout);
 #endif    
         bufferSet = setIntersect(mainSet, otherSet);
-        otherSet = destroySet(otherSet);        
         moveSet(bufferSet, mainSet);
+        otherSet = destroySet(otherSet);  
         free(filePath);
         
 #ifdef DEBUG
@@ -223,6 +223,7 @@ int main (int argc, char *argv[]) {
         otherSet  = newSetFromFile(filePath);
         bufferSet = setSubstract(mainSet, otherSet);
         moveSet(bufferSet, mainSet);
+        destroySet(otherSet);
         free(filePath);
     }
 
@@ -251,5 +252,6 @@ int main (int argc, char *argv[]) {
     setPrint(mainSet, fpOut);
     fclose(fpOut);
   
+    destroySet(mainSet);
     return 0;
 }
