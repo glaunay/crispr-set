@@ -98,9 +98,9 @@ integerSet_t *setSubstract(integerSet_t *iSet, integerSet_t *jSet) {
     int i;
 
     integerSet_t *subSet = malloc(sizeof(integerSet_t));
-    subSet->data = malloc( iSet->size * sizeof(uint64_t) );
+    subSet->data = malloc( iSet->size * sizeof(int64word_t) );
     subSet->size = 0;
-
+    
     for (i = 0; i < iSet->size ; i++) {
 #ifdef DEBUG
         printf("LF: %llu\n", iSet->data[i].value);
