@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include "custom_set.h"
-
+#include "custom_rank.h"
 
 
 
@@ -133,7 +133,7 @@ int main (int argc, char *argv[]) {
             case 'o':
                 notIncludedFileList = parseFileArg(optarg, &notInCnt);
                 break;
-            case 'l':
+            case 'l':                
                 fileLocation = strdup(optarg);
                 break;
             case 'e':
@@ -161,6 +161,7 @@ int main (int argc, char *argv[]) {
 
 #ifdef DEBUG
     printf("Input [in] files number %d\n", inCnt);
+    printf("Base location is %s\n", fileLocation);
 #endif
 
     n = constructFilePath(fileLocation, includedFileList[0], fileExtension, &filePath);
@@ -226,10 +227,6 @@ int main (int argc, char *argv[]) {
 
    
 
-    fpOut = fopen(fileOut, "w");
-    fprintf(fpOut, "Final set (Intersect of %d sets) - (Union of %d sets)\n", inCnt, notInCnt);
-    setPrint(mainSet, fpOut);
-    fclose(fpOut);
 /*
     int32_t list[11] = { 2,5, 7, 8, 10, 15, 22, 89, 333, 100002, 69022343222 };
     int32_t list2[11] = { 0, 5, 7, 22, 104, 333};
@@ -240,5 +237,18 @@ int main (int argc, char *argv[]) {
 */
 
 
+    fpOut = fopen(fileOut, "w");
+    fprintf(fpOut, "Final set (Intersect of %d sets) - (Union of %d sets)\n", inCnt, notInCnt);
+    fprintf(stderr, "Trying to rank %d\n", mainSet->size);
+    
+    /*
+    rankCell_t *rankList = rankSet(mainSet);
+    fprintf(stderr, "Ranked");
+    printRankedList(rankList, fpOut);
+    */
+    rankSetQ(mainSet);
+    setPrint(mainSet, fpOut);
+    fclose(fpOut);
+  
     return 0;
 }

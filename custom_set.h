@@ -1,9 +1,18 @@
+//File: custom_set.h
+#ifndef CUSTOM_SET_H
+#define CUSTOM_SET_H
 #include <stdio.h>
 #include <stdint.h>
 
+
+typedef struct {
+    int count;
+    uint64_t value;
+} int64word_t;
+
 typedef struct {
     int size;
-    uint64_t *data;
+    int64word_t *data;
 } integerSet_t;
 
 
@@ -15,3 +24,6 @@ integerSet_t *newSetFromFile(char *filePath);
 void moveSet(integerSet_t *sourceSet, integerSet_t *targetSet );
 integerSet_t *setSubstract(integerSet_t *iSet, integerSet_t *jSet);
 int constructFilePath(char *fileLocation, char *includedFileList, char *fileExtention, char **filePath);
+int dichotomicSearch(int64word_t *list, int listLength, uint64_t value);
+void rankSetQ(integerSet_t *set);
+#endif
