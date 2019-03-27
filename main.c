@@ -96,7 +96,7 @@ int main (int argc, char *argv[]) {
     char **includedFileList = NULL;
     char **notIncludedFileList = NULL;
     int guestValue = 0;
-
+    int s_start = 1;
     //char *includedFileArg = NULL;
     //char *notIncludedFileArg = NULL;
     
@@ -104,11 +104,14 @@ int main (int argc, char *argv[]) {
     char *filePath = NULL; 
     char *fileExtension = NULL; 
     char *fileOut = NULL;
+    char *fileSeedPath = NULL;
+    
     FILE *fpOut = NULL;
-    const char    *short_opt = "hi:o:l:v:e:f:";
+    const char    *short_opt = "hi:o:l:v:e:f:s:";
     struct option   long_opt[] =
     {
         {"help",               no_argument, NULL, 'h'},
+        {"seed",          required_argument, NULL, 's'},       
         {"in",          required_argument, NULL, 'i'},
         {"notin",          required_argument, NULL, 'o'},
         {"loc",          required_argument, NULL, 'l'},
@@ -126,6 +129,9 @@ int main (int argc, char *argv[]) {
 
             case 'v':
                 guestValue = atoi(optarg);
+                break;
+            case 's':                
+                fileSeedPath = strdup(optarg);
                 break;
             case 'i':
                 includedFileList = parseFileArg(optarg, &inCnt);
@@ -158,27 +164,36 @@ int main (int argc, char *argv[]) {
                 return(-2);
         }
     }
-
 #ifdef DEBUG
     printf("Input [in] files number %d\n", inCnt);
     printf("Base location is %s\n", fileLocation);
 #endif
 
-    n = constructFilePath(fileLocation, includedFileList[0], fileExtension, &filePath);
-
+    if (fileSeedPath != NULL) {
 #ifdef DEBUG
-    printf("Starting set from file::%s\n", filePath);
+    printf("Using following seed file %s\n", fileSeedPath);
 #endif
+        n = constructFilePath(NULL, fileSeedPath, NULL, &filePath);
+        s_start = 0;
+    } else {
+        n = constructFilePath(fileLocation, includedFileList[0], fileExtension, &filePath);
+        s_start = 1;
+#ifdef DEBUG
+    printf("Starting set from 1st included file::%s\n", filePath);
+#endif
+    }
 
     integerSet_t *mainSet = newSetFromFile(filePath);
     free(filePath);
 
 #ifdef DEBUG
-     setPrint(mainSet, stdout);
+    printf("Initial Set Content\n");
+    setPrint(mainSet, stdout);
 #endif
 
+
     integerSet_t *otherSet, *bufferSet;
-    for (int s = 1; s < inCnt; s++) {
+    for (int s = s_start; s < inCnt; s++) {
         n = constructFilePath(fileLocation, includedFileList[s], fileExtension, &filePath);    
 #ifdef DEBUG
         printf("[in] Reading file[%d] :%s\n", s, filePath);
