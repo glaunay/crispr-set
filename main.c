@@ -203,8 +203,8 @@ int main (int argc, char *argv[]) {
          setPrint(mainSet, stdout);
 #endif    
         bufferSet = setIntersect(mainSet, otherSet);
-        otherSet = destroySet(otherSet);        
         moveSet(bufferSet, mainSet);
+        otherSet = destroySet(otherSet);  
         free(filePath);
         
 #ifdef DEBUG
@@ -221,9 +221,10 @@ int main (int argc, char *argv[]) {
 #ifdef DEBUG
         printf("Final intersection set\n");
         setPrint(mainSet, stdout);
+        printf("Input [notin] files number %d\n", notInCnt);
 #endif   
 
-    printf("Input [notin] files number %d\n", notInCnt);
+   
     for (int s = 0; s < notInCnt; s++) {
         if(mainSet->size == 0){
             fprintf(stderr, "remaining size is zero, early exit substraction\n");
@@ -238,10 +239,9 @@ int main (int argc, char *argv[]) {
         otherSet  = newSetFromFile(filePath);
         bufferSet = setSubstract(mainSet, otherSet);
         moveSet(bufferSet, mainSet);
+        destroySet(otherSet);
         free(filePath);
     }
-
-   
 
 /*
     int32_t list[11] = { 2,5, 7, 8, 10, 15, 22, 89, 333, 100002, 69022343222 };
@@ -255,8 +255,9 @@ int main (int argc, char *argv[]) {
 
     fpOut = fopen(fileOut, "w");
     fprintf(fpOut, "Final set (Intersect of %d sets) - (Union of %d sets)\n", inCnt, notInCnt);
+#ifdef DEBUG  
     fprintf(stderr, "Trying to rank %d\n", mainSet->size);
-    
+#endif    
     /*
     rankCell_t *rankList = rankSet(mainSet);
     fprintf(stderr, "Ranked");
@@ -266,5 +267,6 @@ int main (int argc, char *argv[]) {
     setPrint(mainSet, fpOut);
     fclose(fpOut);
   
+    destroySet(mainSet);
     return 0;
 }
