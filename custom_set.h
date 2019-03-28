@@ -8,15 +8,19 @@
 typedef struct {
     int count;
     uint64_t value;
+    int nbPrime;
+    int *primeList;
+    //uint64_t *primeValues;
 } int64word_t;
 
 typedef struct {
     int size;
+    int _size;
     int64word_t *data;
 } integerSet_t;
 
 
-
+integerSet_t *newSetZeros(int newSetSize);
 integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet);
 void setPrint(integerSet_t *set, FILE *stream );
 integerSet_t *destroySet(integerSet_t *set);

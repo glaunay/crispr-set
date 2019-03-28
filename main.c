@@ -18,7 +18,8 @@
 #include <getopt.h>
 #include "custom_set.h"
 #include "custom_rank.h"
-
+#include "custom_transform.h"
+#include <stdbool.h>
 
 
 char *strMemCopy(char *src) {
@@ -93,6 +94,9 @@ int main (int argc, char *argv[]) {
     int c, n;
     int inCnt = 0;
     int notInCnt = 0;
+    int iSuffLength = 0;
+    int jSuffLength = 0;
+    bool doProject = false;
     char **includedFileList = NULL;
     char **notIncludedFileList = NULL;
     int guestValue = 0;
@@ -107,17 +111,19 @@ int main (int argc, char *argv[]) {
     char *fileSeedPath = NULL;
     
     FILE *fpOut = NULL;
-    const char    *short_opt = "hi:o:l:v:e:f:s:";
+    const char    *short_opt = "hi:o:l:v:e:f:s:d:c:";
     struct option   long_opt[] =
     {
-        {"help",               no_argument, NULL, 'h'},
-        {"seed",          required_argument, NULL, 's'},       
-        {"in",          required_argument, NULL, 'i'},
+        {"help",                 no_argument, NULL, 'h'},
+        {"dom",            required_argument, NULL, 'd'},       
+        {"codom",          required_argument, NULL, 'c'},       
+        {"seed",           required_argument, NULL, 's'},       
+        {"in",             required_argument, NULL, 'i'},
         {"notin",          required_argument, NULL, 'o'},
-        {"loc",          required_argument, NULL, 'l'},
-        {"val",          required_argument, NULL, 'v'},
-        {"ext",          required_argument, NULL, 'e'},
-        {NULL,            0,                NULL, 0  }
+        {"loc",            required_argument, NULL, 'l'},
+        {"val",            required_argument, NULL, 'v'},
+        {"ext",            required_argument, NULL, 'e'},
+        {NULL,             0,                 NULL, 0  }
     };
 
 
@@ -130,8 +136,11 @@ int main (int argc, char *argv[]) {
             case 'v':
                 guestValue = atoi(optarg);
                 break;
+            case 'd':                
+                iSuffLength = atoi(optarg);
+                break;
             case 's':                
-                fileSeedPath = strdup(optarg);
+                jSuffLength = atoi(optarg);
                 break;
             case 'i':
                 includedFileList = parseFileArg(optarg, &inCnt);
@@ -164,6 +173,13 @@ int main (int argc, char *argv[]) {
                 return(-2);
         }
     }
+
+    if ( iSuffLength < jSuffLength  || iSuffLength * jSuffLength < 0 ||  iSuffLength + jSuffLength < 0) {
+        fprintf(stderr, "irregular suffix length");
+        exit(1);
+    }
+    doProject = iSuffLength > jSuffLength;
+    
 #ifdef DEBUG
     printf("Input [in] files number %d\n", inCnt);
     printf("Base location is %s\n", fileLocation);
@@ -183,6 +199,7 @@ int main (int argc, char *argv[]) {
 #endif
     }
 
+    integerSet_t *_mainSet, *_otherSet;
     integerSet_t *mainSet = newSetFromFile(filePath);
     free(filePath);
 
@@ -191,14 +208,21 @@ int main (int argc, char *argv[]) {
     setPrint(mainSet, stdout);
 #endif
 
-
+    if (doProject) {
+        _mainSet = mainSet;
+        mainSet = project(_mainSet, iSuffLength, jSuffLength, 4) ;
+    }
     integerSet_t *otherSet, *bufferSet;
     for (int s = s_start; s < inCnt; s++) {
         n = constructFilePath(fileLocation, includedFileList[s], fileExtension, &filePath);    
 #ifdef DEBUG
         printf("[in] Reading file[%d] :%s\n", s, filePath);
 #endif  
-        otherSet  = newSetFromFile(filePath);      
+        otherSet  = newSetFromFile(filePath);
+        if(doProject) {
+            _otherSet = otherSet;
+            otherSet = project(_otherSet, iSuffLength, jSuffLength, 4) ;
+        }      
 #ifdef DEBUG
          setPrint(mainSet, stdout);
 #endif    
@@ -211,10 +235,6 @@ int main (int argc, char *argv[]) {
         printf("Current intersection set\n");
          setPrint(mainSet, stdout);
 #endif
-        if(mainSet->size == 0) {
-            fprintf(stderr, "intersect size is zero, early exit\n");
-            break;
-        }
         
     }
 
@@ -227,7 +247,7 @@ int main (int argc, char *argv[]) {
    
     for (int s = 0; s < notInCnt; s++) {
         if(mainSet->size == 0){
-            fprintf(stderr, "remaining size is zero, early exit substraction\n");
+            fprintf(stderr, "intersect size is zero, early exit\n");
             break;
         }
             
@@ -241,6 +261,10 @@ int main (int argc, char *argv[]) {
         moveSet(bufferSet, mainSet);
         destroySet(otherSet);
         free(filePath);
+
+        if(doProject) {
+            //_mainSet, _otherSet
+        }
     }
 
 /*
