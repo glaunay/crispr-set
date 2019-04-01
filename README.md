@@ -1,5 +1,9 @@
 ## Perform integer ensemble comparaisons
 
+#### DEVEL CL
+```
+./setCompare -d 23 -c 17 -i "smallTest&smallTest" -l ./data -f test.out -e index
+```
 
 #### Usage
 
