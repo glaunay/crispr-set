@@ -78,13 +78,14 @@ void freeSetData(integerSet_t *set) {
     return;
     int nbData = set->_size > 0 ? set->_size : set->size;
 
-    for (i=0 ; i < set->size; i++)
+    for (i=0 ; i < nbData; i++)
         if(set->data->primeList != NULL)
             free(set->data->primeList);
     free(set->data);
 }
 
 integerSet_t *destroySet(integerSet_t *set) {
+    fprintf(stderr,"CLICK\n");
     freeSetData(set);
     free(set);
     return set;
@@ -95,7 +96,6 @@ integerSet_t *destroySet(integerSet_t *set) {
 // Move source content into target, free source
 
 void moveSet(integerSet_t *sourceSet, integerSet_t *targetSet ) {
-    int i;
     targetSet->size = sourceSet->size;
     targetSet->_size = sourceSet->_size;
     freeSetData(targetSet);
@@ -109,17 +109,16 @@ void moveSet(integerSet_t *sourceSet, integerSet_t *targetSet ) {
 void copyWord(int64word_t *source, int64word_t *target) {
     target->count = source->count;
     target->value = source->value;
-    target->nbPrime = source->nbPrime;    
     // In case we deal with words featuring prime lists
     int *buffer;
     if (source->nbPrime > 0 || target->nbPrime > 0) {
         //Concatenate source and target prime lists
-        size_t sz = (source->nbPrime + target->nbPrime) * sizeof(int);
+        size_t sz = (source->nbPrime + target->nbPrime) * sizeof(uint64_t);
         buffer = malloc(sz);
         if(source->nbPrime > 0)
-            memcpy(buffer, source->primeList, source->nbPrime * sizeof(int) );
+            memcpy(buffer, source->primeList, source->nbPrime * sizeof(uint64_t) );
         if(target->nbPrime > 0)
-            memcpy(&(buffer[source->nbPrime]), target->primeList, target->nbPrime * sizeof(int) );
+            memcpy(&(buffer[source->nbPrime]), target->primeList, target->nbPrime * sizeof(uint64_t) );
         if (target->primeList != NULL) 
             free(target->primeList);
         target->primeList = malloc(sz);
@@ -127,16 +126,17 @@ void copyWord(int64word_t *source, int64word_t *target) {
         memcpy(target->primeList, buffer, sz);
     }
 
+    target->nbPrime += source->nbPrime;    
 }
 
 // Susbtract FROM the iSet the elements also found in jSet
 integerSet_t *setSubstract(integerSet_t *iSet, integerSet_t *jSet) {
     int i;
-
-    integerSet_t *subSet = malloc(sizeof(integerSet_t));
+    integerSet_t *subSet = newSetZeros(iSet->size);
+   /* integerSet_t *subSet = malloc(sizeof(integerSet_t));
     subSet->data = malloc( iSet->size * sizeof(int64word_t) );
     subSet->size = 0;
-    
+    */
     for (i = 0; i < iSet->size ; i++) {
 #ifdef DEBUG
         printf("LF: %llu\n", iSet->data[i].value);
@@ -154,20 +154,15 @@ integerSet_t *setSubstract(integerSet_t *iSet, integerSet_t *jSet) {
 }
 
 // We do pre allocation on smallest
-integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet, int longLen, int shortLen, int base) {
+integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet) {
     int i,j;
     integerSet_t *iSet = xSet->size < ySet->size ? xSet : ySet ;
     integerSet_t *jSet = xSet->size < ySet->size ? ySet : xSet ;
-    integerSet_t *_set;
-    if (longLen > 0 && shortLen > 0) {
-        iSet = project(iSet, longLen, shortLen, base);
-        jSet = project(jSet, longLen, shortLen, base);
-    }
-
-
+    /*
     integerSet_t *interSet = malloc(sizeof(integerSet_t));
     interSet->data = malloc( iSet->size * sizeof(int64word_t) );
-    interSet->size = 0;
+    interSet->size = 0;*/
+    integerSet_t *interSet = newSetZeros(iSet->size);  
     uint64_t seekedValue;
 
     for (i = 0; i < iSet->size ; i++) {
@@ -188,29 +183,37 @@ integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet, int longLen, 
         printf("Size of intersect Set: %d\n", interSet->size);
 #endif
 
-    if (longLen > 0 && shortLen > 0)
 
     return interSet;
 }
 
 void setPrint(integerSet_t *set, FILE *stream ) {
-    int x;
-    
+    int x, y;
     fprintf(stream, "# %d items set\n", set->size);
 
     for (x = 0; x < set->size; x++) {
         fprintf(stream, "%llu:%d", set->data[x].value, set->data[x].count);
-        if (x < set->size - 1)
-            fprintf(stream, ",");
+        if(set->data[x].nbPrime > 0) {
+            /* Print prime list*/
+            fprintf(stream, "[");
+            for (y = 0; y < set->data[x].nbPrime ; y++)
+                fprintf(stream, "%llu", set->data[x].primeList[y]);
+            fprintf(stream, "]\n");
+        } else {
+            if (x < set->size - 1)
+                fprintf(stream, ",");
+        }
     }
     fprintf(stream, "\n");
 }
 
+// Initialize a interSet for a max of provided number of words
+// Return a structure with the *size* field equal to zero, max size is stored in *_size*
 integerSet_t *newSetZeros(int newSetSize) {
     integerSet_t *newSet = malloc(sizeof(integerSet_t));
     int i;
-    newSet->size = newSetSize;
-    newSet->_size = 0;
+    newSet->size = 0;
+    newSet->_size = newSetSize;
     newSet->data = malloc(newSet->size * sizeof(int64word_t));
     for (i = 0; i < newSet->size ; i++) {
         newSet->data[i].nbPrime = 0;
@@ -235,23 +238,29 @@ integerSet_t *newSetFromFile(char *filePath) {
         exit(1);
     }
     uint64_t cValue;
-    int count, i;
-    int dataIndex = 0;
+    int count;
+    int total = -1;
     while ((read = getline(&line, &len, fp)) != -1) {
         //printf("Retrieved line of length %zu:\n", read);
-        sscanf (line, "%llu %d", &cValue, &count);
-        if(newSet->size < 0) {
-            newSet = newSetZeros(cValue);
+        if(total < 0) {
+            sscanf (line, "%d", &total);
+            newSet = newSetZeros(total);
             continue;
         }
-        newSet->data[dataIndex].value = cValue;
-        newSet->data[dataIndex].count = count;
-        dataIndex += 1;        
+
+        sscanf (line, "%llu %d", &cValue, &count);
+        newSet->data[newSet->size].value = cValue;
+        newSet->data[newSet->size].count = count;
+        newSet->size += 1;        
     }
     fclose(fp);
     if (line)
         free(line);
    
+    if (newSet->size != total) {
+        fprintf(stderr, "Uncorrect number of elements on input\n");
+        exit(1);
+    }
     return newSet;
 }
 

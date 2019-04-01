@@ -139,7 +139,7 @@ int main (int argc, char *argv[]) {
             case 'd':                
                 iSuffLength = atoi(optarg);
                 break;
-            case 's':                
+            case 'c':                
                 jSuffLength = atoi(optarg);
                 break;
             case 'i':
@@ -156,6 +156,9 @@ int main (int argc, char *argv[]) {
                 break;
             case 'f':
                 fileOut = strdup(optarg);
+                break;
+            case 's':
+                fileSeedPath = strdup(optarg);
                 break;
             case 'h':
                 printf("Performing comparaison ensemble on set of intefger keys");
@@ -180,6 +183,7 @@ int main (int argc, char *argv[]) {
     }
     doProject = iSuffLength > jSuffLength;
     
+
 #ifdef DEBUG
     printf("Input [in] files number %d\n", inCnt);
     printf("Base location is %s\n", fileLocation);
@@ -211,7 +215,9 @@ int main (int argc, char *argv[]) {
     if (doProject) {
         _mainSet = mainSet;
         mainSet = project(_mainSet, iSuffLength, jSuffLength, 4) ;
+        destroySet(_mainSet);  
     }
+    exit(1);
     integerSet_t *otherSet, *bufferSet;
     for (int s = s_start; s < inCnt; s++) {
         n = constructFilePath(fileLocation, includedFileList[s], fileExtension, &filePath);    
@@ -222,6 +228,7 @@ int main (int argc, char *argv[]) {
         if(doProject) {
             _otherSet = otherSet;
             otherSet = project(_otherSet, iSuffLength, jSuffLength, 4) ;
+            destroySet(_otherSet);  
         }      
 #ifdef DEBUG
          setPrint(mainSet, stdout);

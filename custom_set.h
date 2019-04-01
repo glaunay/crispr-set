@@ -9,7 +9,7 @@ typedef struct {
     int count;
     uint64_t value;
     int nbPrime;
-    int *primeList;
+    uint64_t *primeList;
     //uint64_t *primeValues;
 } int64word_t;
 

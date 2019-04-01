@@ -4,11 +4,12 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include "custom_set.h";
+#include "custom_set.h"
 
 
 integerSet_t *project(integerSet_t *fromSet, int froDim, int targetDim, int base);
 int compareByValue (const void * a, const void * b);
 void rankSetByValue(integerSet_t *set);
+int64_t customTruncate(int64_t value, int sizeFrom, int sizeTo, int base);
 
 #endif
