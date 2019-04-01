@@ -10,33 +10,45 @@
 #include "custom_transform.h"
 
 integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int base) {
-    fprintf(stderr,"PROJECTING...\n");
-    setPrint(fromSet, stderr);
-    fprintf(stderr,">%lld<\n", fromSet->data[1].value);
-    fprintf(stderr,"targetSet <- newSetZeros\n");
+    #ifdef DEBUG
+        fprintf(stderr,"PROJECTING...\n");
+        setPrint(fromSet, stderr);
+    #endif
     integerSet_t *targetSet = newSetZeros(fromSet->size);
-    fprintf(stderr,"targetSet content\n");
-    setPrint(targetSet, stderr);
-    fprintf(stderr,"targetSet hidden size>>%d<<\n", targetSet->_size);
-    fprintf(stderr, "Trying to access to elet pos 1 in fromSet\n");
-    fprintf(stderr,">%lld<\n", fromSet->data[1].value);
-    fprintf(stderr,"fromSet content\n");
-    setPrint(fromSet, stderr);
-
+    #ifdef DEBUG
+        fprintf(stderr,"targetSet content\n");
+        setPrint(targetSet, stderr);
+    #endif
     int i;
-    fprintf(stderr,"AA...\n");
+    #ifdef DEBUG
+        fprintf(stderr,"Encoding fromSet...(%d loops)\n", fromSet->size);
+    #endif
     for (i = 0 ; i < fromSet->size ; i++) {
-        fprintf(stderr, "(%d)uu:%lld\n", i, fromSet->data[i].value);
+        #ifdef DEBUG
+            fprintf(stderr, "fromSet index %d\t%lld:%d\n", i, fromSet->data[i].value, fromSet->data[i].count);
+        #endif
         targetSet->data[i].count = fromSet->data[i].count;
         targetSet->data[i].value = customTruncate(fromSet->data[i].value, fromDim, targetDim, base);
         targetSet->data[i].nbPrime = 1;
         targetSet->data[i].primeList = malloc(sizeof(uint64_t));
         targetSet->data[i].primeList[0] = fromSet->data[i].value;
         targetSet->size++;
+        #ifdef DEBUG
+            fprintf(stderr, "targetSet index %d\n", i);
+            wordPrint(&(targetSet->data[i]), stderr );
+        #endif
+        //fprintf(stderr, "targetSet index %d\t%lld:%d\n", i, fromSet->data[i].value, fromSet->data[i].count);
     }
-    fprintf(stderr,"BB...\n");
+#ifdef DEBUG
+    fprintf(stderr,"Ranking this\n");
+    setPrint(targetSet, stderr);
+#endif
     rankSetByValue(targetSet);
-
+#ifdef DEBUG
+    fprintf(stderr,"into this\n");
+    setPrint(targetSet, stderr);
+    fprintf(stderr,"Compressing above set\n");
+#endif
     // Now Compress it as finalSet
 
     int buffSize = pow(base, fromDim - targetDim);
@@ -51,16 +63,19 @@ integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int bas
     newWord->count = targetSet->data[0].count;
     buffSize = 1;
     buffer[0] = targetSet->data[0].primeList[0];
-    finalSet->size = 1;
 
     int64word_t *currWord;
-    for(i = 0; i < targetSet->size ; i++) {
+    for(i = 1; i < targetSet->size ; i++) {
         currWord = &(targetSet->data[i]);
+#ifdef DEBUG
+        fprintf(stderr, "current Word is\t");
+        wordPrint(currWord, stderr);
+#endif
         // Current word and new word collides, we store the   
         if (currWord->value == newWord->value) {
             newWord->count += currWord->count;
-            buffSize++;
             buffer[buffSize] = currWord->primeList[0] ;//i;
+            buffSize++;
             continue;
         }
         //Flush&Store new word
@@ -75,6 +90,12 @@ integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int bas
         newWord->count = currWord->count;
         newWord->value += currWord->value;
     }
+    #ifdef DEBUG
+        fprintf(stderr, "Trailing buffer of size %d:\n", buffSize);
+        for ( i = 0; i < buffSize; i++)
+            fprintf(stderr, ">%lld<", buffer[i]);
+        fprintf(stderr, "\n");
+    #endif
     //Store trailing new word
     newWord->primeList = malloc(buffSize * sizeof(uint64_t));
     memcpy(newWord->primeList, buffer, sizeof(uint64_t) * buffSize);
@@ -82,6 +103,12 @@ integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int bas
     finalSet->size++;
 
     destroySet(targetSet);
+
+    #ifdef DEBUG
+        fprintf(stderr,"into this\n");
+        setPrint(finalSet, stderr);
+    #endif
+
     return finalSet;
 }
 
@@ -90,22 +117,37 @@ int64_t customTruncate(int64_t value, int sizeFrom, int sizeTo, int base) {
     int64_t offset = 0;
     int64_t w;
     int i;
-    fprintf(stderr,"[%lld] from %d to %d\n", value, sizeFrom, sizeTo);
-    for(i = sizeFrom ; i <= sizeTo ; i--) {
-        w       = value / (int64_t)( pow(base, i) ); // Floor division
-        offset += w     * (int64_t)( pow(base, i));
-        value   = value % (int64_t)( pow(base, i));
+    int64_t cur;
+#ifdef DEBUG
+    fprintf(stderr,"Projecting value %lld from %dD to %dD\n", value, sizeFrom, sizeTo);
+#endif
+    for(i = sizeFrom ; i >= sizeTo ; i--) {
+        cur = int64_exp((int64_t) base, (int64_t)i);
+        w       = value / cur; // Floor division
+        offset += w     * cur;
+        value   = value % cur;
     }
+#ifdef DEBUG
     fprintf(stderr,"\t=> %lld - %lld = %lld\n", _value, offset, _value - offset);
+#endif
     return _value - offset;
 }
-    
+
+int64_t int64_exp( int64_t base, int64_t exponent) {
+    int i;
+    int64_t value = 1;
+    for (i = 0; i < exponent; i++)
+        value *= base;
+    return value;
+}
 int compareByValue (const void * a, const void * b)
 {
     int64word_t* w0 = (int64word_t *) a;
     int64word_t* w1 = (int64word_t *) b;
     
-    return w1->value - w0->value;
+    if (w0->value < w1->value) return -1;
+    if (w0->value > w1->value) return 1;
+    return 0;
 }
 
 

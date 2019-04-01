@@ -22,7 +22,8 @@ typedef struct {
 
 integerSet_t *newSetZeros(int newSetSize);
 integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet);
-void setPrint(integerSet_t *set, FILE *stream );
+void setPrint(integerSet_t *set, FILE *stream);
+void wordPrint(int64word_t *word, FILE *stream);
 integerSet_t *destroySet(integerSet_t *set);
 integerSet_t *newSetFromFile(char *filePath);
 void moveSet(integerSet_t *sourceSet, integerSet_t *targetSet );
@@ -30,4 +31,5 @@ integerSet_t *setSubstract(integerSet_t *iSet, integerSet_t *jSet);
 int constructFilePath(char *fileLocation, char *includedFileList, char *fileExtention, char **filePath);
 int dichotomicSearch(int64word_t *list, int listLength, uint64_t value);
 void rankSetQ(integerSet_t *set);
+void copyWordInto(int64word_t *sourceOne, int64word_t *sourceTwo, int64word_t *target);
 #endif

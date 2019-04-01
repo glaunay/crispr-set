@@ -99,7 +99,7 @@ int main (int argc, char *argv[]) {
     bool doProject = false;
     char **includedFileList = NULL;
     char **notIncludedFileList = NULL;
-    int guestValue = 0;
+    //int guestValue = 0;
     int s_start = 1;
     //char *includedFileArg = NULL;
     //char *notIncludedFileArg = NULL;
@@ -121,7 +121,7 @@ int main (int argc, char *argv[]) {
         {"in",             required_argument, NULL, 'i'},
         {"notin",          required_argument, NULL, 'o'},
         {"loc",            required_argument, NULL, 'l'},
-        {"val",            required_argument, NULL, 'v'},
+      //  {"val",            required_argument, NULL, 'v'},
         {"ext",            required_argument, NULL, 'e'},
         {NULL,             0,                 NULL, 0  }
     };
@@ -133,9 +133,9 @@ int main (int argc, char *argv[]) {
             case 0:        /* long options toggles */
             break;
 
-            case 'v':
+         /*   case 'v':
                 guestValue = atoi(optarg);
-                break;
+                break;*/
             case 'd':                
                 iSuffLength = atoi(optarg);
                 break;
@@ -184,72 +184,72 @@ int main (int argc, char *argv[]) {
     doProject = iSuffLength > jSuffLength;
     
 
-#ifdef DEBUG
-    printf("Input [in] files number %d\n", inCnt);
-    printf("Base location is %s\n", fileLocation);
-#endif
+    #ifdef DEBUG
+        printf("Input [in] files number %d\n", inCnt);
+        printf("Base location is %s\n", fileLocation);
+    #endif
 
     if (fileSeedPath != NULL) {
-#ifdef DEBUG
-    printf("Using following seed file %s\n", fileSeedPath);
-#endif
+    #ifdef DEBUG
+        printf("Using following seed file %s\n", fileSeedPath);
+    #endif
         n = constructFilePath(NULL, fileSeedPath, NULL, &filePath);
         s_start = 0;
     } else {
         n = constructFilePath(fileLocation, includedFileList[0], fileExtension, &filePath);
         s_start = 1;
-#ifdef DEBUG
-    printf("Starting set from 1st included file::%s\n", filePath);
-#endif
+    #ifdef DEBUG
+        printf("Starting set from 1st included file::%s\n", filePath);
+    #endif
     }
 
     integerSet_t *_mainSet, *_otherSet;
     integerSet_t *mainSet = newSetFromFile(filePath);
     free(filePath);
 
-#ifdef DEBUG
-    printf("Initial Set Content\n");
-    setPrint(mainSet, stdout);
-#endif
+    #ifdef DEBUG
+        printf("Initial Set Content\n");
+        setPrint(mainSet, stdout);
+    #endif
 
     if (doProject) {
         _mainSet = mainSet;
         mainSet = project(_mainSet, iSuffLength, jSuffLength, 4) ;
         destroySet(_mainSet);  
     }
-    exit(1);
+    
     integerSet_t *otherSet, *bufferSet;
     for (int s = s_start; s < inCnt; s++) {
         n = constructFilePath(fileLocation, includedFileList[s], fileExtension, &filePath);    
-#ifdef DEBUG
-        printf("[in] Reading file[%d] :%s\n", s, filePath);
-#endif  
+        #ifdef DEBUG
+            printf("[in] Reading file[%d] :%s\n", s, filePath);
+        #endif  
         otherSet  = newSetFromFile(filePath);
         if(doProject) {
             _otherSet = otherSet;
             otherSet = project(_otherSet, iSuffLength, jSuffLength, 4) ;
             destroySet(_otherSet);  
         }      
-#ifdef DEBUG
-         setPrint(mainSet, stdout);
-#endif    
+        #ifdef DEBUG
+            setPrint(mainSet, stdout);
+        #endif    
         bufferSet = setIntersect(mainSet, otherSet);
         moveSet(bufferSet, mainSet);
         otherSet = destroySet(otherSet);  
         free(filePath);
         
-#ifdef DEBUG
-        printf("Current intersection set\n");
-         setPrint(mainSet, stdout);
-#endif
+        #ifdef DEBUG
+            printf("Current intersection set\n");
+            setPrint(mainSet, stdout);
+        #endif
         
     }
 
-#ifdef DEBUG
-        printf("Final intersection set\n");
-        setPrint(mainSet, stdout);
-        printf("Input [notin] files number %d\n", notInCnt);
-#endif   
+        #ifdef DEBUG
+            printf("Final intersection set\n");
+            setPrint(mainSet, stdout);
+            printf("Input [notin] files number %d\n", notInCnt);
+        #endif   
 
    
     for (int s = 0; s < notInCnt; s++) {
@@ -260,9 +260,9 @@ int main (int argc, char *argv[]) {
             
 
         n = constructFilePath(fileLocation, notIncludedFileList[s], fileExtension, &filePath);
-#ifdef DEBUG
-        printf("[notin] Reading file[%d] :%s\n", s, filePath);
-#endif  
+        #ifdef DEBUG
+            printf("[notin] Reading file[%d] :%s\n", s, filePath);
+        #endif  
         otherSet  = newSetFromFile(filePath);
         bufferSet = setSubstract(mainSet, otherSet);
         moveSet(bufferSet, mainSet);
