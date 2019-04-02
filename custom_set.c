@@ -34,16 +34,6 @@ int dichotomicSearch(int64word_t *list, int listLength, uint64_t value) {
         }
         if (x == 0)
             break;
-/*
-#ifdef DEBUG        
-        if(list[x] < value) {
-            printf("GOING UP\n");
-        } else {
-            printf("GOING DOWN\n");
-        }
-#endif
-*/
-        //printf("%d erased %d\n", x, _x);
         if (value < list[x].value) { // current value if bigger than seeked one 
             #ifdef DEBUG
                 printf("GOING DOWN\n");
@@ -63,6 +53,8 @@ int dichotomicSearch(int64word_t *list, int listLength, uint64_t value) {
             printf("Next x is %d\n\n", x);
         #endif
     }
+    if(x == 0 && list[x].value == value)
+        found = true;
     #ifdef DEBUG        
         fprintf(stderr,"%llu == %llu\n", list[hi_x].value, value);
     #endif
@@ -215,6 +207,9 @@ integerSet_t *setIntersect(integerSet_t *xSet, integerSet_t *ySet) {
             interSet->data[interSet->size].count = iSet->data[i].count + jSet->data[j].count;*/
             copyWordInto( &(iSet->data[i]), &(jSet->data[j]), &(interSet->data[interSet->size]) );
             interSet->size++;
+            #ifdef DEBUG
+                printf("FOUND\n");
+            #endif
         }
     }
 
