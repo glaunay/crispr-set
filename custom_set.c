@@ -22,13 +22,13 @@ int dichotomicSearch(int64word_t *list, int listLength, uint64_t value) {
 #endif
 
     while (hi_x - lo_x > 1) {
-#ifdef DEBUG
-        printf("Looking at %llu[%d]\n", list[x].value, x);
-#endif        
+        #ifdef DEBUG
+            printf("Looking at %llu[%d]\n", list[x].value, x);
+        #endif        
         if (list[x].value == value) {
-#ifdef DEBUG
+        #ifdef DEBUG
             printf("Found it at pos %d!!\n", x);
-#endif
+        #endif
             found = true;
             break;
         }
@@ -66,11 +66,18 @@ int dichotomicSearch(int64word_t *list, int listLength, uint64_t value) {
     #ifdef DEBUG        
         fprintf(stderr,"%llu == %llu\n", list[hi_x].value, value);
     #endif
-    if (list[hi_x].value == value)
-        return hi_x;
-    if (list[lo_x].value == value)
-        return lo_x;
-        
+    
+    /*
+    if(found)
+        fprintf(stderr, "Found it!\n");
+    fprintf(stderr,"[[%d ((up:%d,lo:%d))]] %llu == %llu\n", listLength, hi_x, lo_x, list[hi_x].value, value);
+    if(!found) {
+        if (list[hi_x].value == value)
+            return hi_x;
+        if (list[lo_x].value == value)
+            return lo_x;
+    }
+    */        
     return found ? x : -1;    
 }
 
@@ -80,10 +87,10 @@ void freeSetData(integerSet_t *set) {
     if(set->data == NULL)
         return;
    for (i = 0 ; i < set->_size; i++) {
-        if(set->data->primeList != NULL) {
-            tmp_ptr = set->data->primeList;
+        if(set->data[i].primeList != NULL) {
+            tmp_ptr = set->data[i].primeList;
             free(tmp_ptr);
-            set->data->primeList = NULL;
+            set->data[i].primeList = NULL;
             //free(set->data->primeList);
         }
     }
@@ -115,15 +122,16 @@ void moveSet(integerSet_t *sourceSet, integerSet_t *targetSet ) {
 // DANGEROUS FUNCTION FREEING TARGET FIELD ON THE FLY !!
 void copyWordInto(int64word_t *sourceOne, int64word_t *sourceTwo, int64word_t *target) {
 
+#ifdef DEBUG
     fprintf(stderr, "Copying following words\n");
     wordPrint(sourceOne, stderr);
     if (sourceTwo != NULL)
         wordPrint(sourceTwo, stderr);
-
+#endif
     int iCount = sourceOne->count;
-    int jCount = sourceTwo->count != NULL ? sourceTwo->count : 0;
+    int jCount = sourceTwo != NULL ? sourceTwo->count : 0;
     int iNbPrime = sourceOne->nbPrime;
-    int jNbPrime = sourceTwo->nbPrime != NULL ? sourceTwo->nbPrime : 0;
+    int jNbPrime = sourceTwo != NULL ? sourceTwo->nbPrime : 0;
 
 
     target->count = iCount + jCount;
@@ -153,10 +161,10 @@ void copyWordInto(int64word_t *sourceOne, int64word_t *sourceTwo, int64word_t *t
         free(buffer);
     }
    
-    //target->nbPrime += source->nbPrime;
-    fprintf(stderr, "Build Word is \n");
-    wordPrint(target, stderr);
-
+   #ifdef DEBUG
+        fprintf(stderr, "Build Word is \n");
+        wordPrint(target, stderr);
+    #endif
 }
 
 // Susbtract FROM the iSet the elements also found in jSet
@@ -168,18 +176,17 @@ integerSet_t *setSubstract(integerSet_t *iSet, integerSet_t *jSet) {
     subSet->size = 0;
     */
     for (i = 0; i < iSet->size ; i++) {
-#ifdef DEBUG
-        printf("LF: %llu\n", iSet->data[i].value);
-#endif
-        printf("LF: %llu\n", iSet->data[i].value);
         j = dichotomicSearch(jSet->data, jSet->size, iSet->data[i].value);
         if (j == -1 ) {
            /* subSet->data[subSet->size].value = iSet->data[i].value;
             subSet->data[subSet->size].count = iSet->data[i].count;            */
             copyWordInto( &(iSet->data[i]), NULL, &(subSet->data[subSet->size]) );
             subSet->size++;
+        } else {
+            #ifdef DEBUG            
+                fprintf(stderr, "FOUND %lld\n", iSet->data[i].value);
+            #endif
         }
-
     }
 
     return subSet;
@@ -264,6 +271,8 @@ integerSet_t *newSetZeros(int newSetSize) {
     for (i = 0; i < newSet->_size ; i++) {
         newSet->data[i].nbPrime = 0;
         newSet->data[i].primeList = NULL;
+        newSet->data[i].count = 0;
+        newSet->data[i].value = 0;
     }
     return newSet;
 }
@@ -310,3 +319,48 @@ integerSet_t *newSetFromFile(char *filePath) {
     return newSet;
 }
 
+/* Uniq primeList elements */
+/*  Shortening size list using nbPrime, allocation is not retailored !!! */
+void tidySet(integerSet_t *oriSet) {
+    int iWord, iPrime;
+    uint64_t *primeBuffer = NULL;
+    int64word_t *cWord;
+    uint64_t prevPrime, currPrime;
+    int count;
+    for (iWord = 0; iWord < oriSet->size; iWord++) {
+        cWord = &(oriSet->data[iWord]);
+        sortWordPrimeList(cWord);
+        primeBuffer = malloc(cWord->nbPrime * sizeof(uint64_t));
+        
+        prevPrime = cWord->primeList[0];
+        primeBuffer[0] = prevPrime;
+        count = 1;
+
+        for (iPrime = 1 ; iPrime < cWord->nbPrime; iPrime++) {
+            currPrime = cWord->primeList[iPrime];
+            if(currPrime == prevPrime)
+                continue;
+            primeBuffer[count] = currPrime;
+            prevPrime = currPrime;
+            count++;
+        }
+        memcpy(cWord->primeList, primeBuffer,  count * sizeof(uint64_t));
+        cWord->nbPrime = count;
+        free(primeBuffer);
+    }
+}
+
+
+void sortWordPrimeList(int64word_t *word) {
+    qsort (word->primeList, word->nbPrime, sizeof(uint64_t), uint64_compare);
+}
+
+int uint64_compare (const void * a, const void * b)
+{
+    uint64_t* i0 = (uint64_t *) a;
+    uint64_t* i1 = (uint64_t *) b;
+    
+    if (i0 < i1) return -1;
+    if (i0 > i1) return 1;
+    return 0;
+}

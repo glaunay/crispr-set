@@ -96,12 +96,17 @@ integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int bas
             fprintf(stderr, ">%lld<", buffer[i]);
         fprintf(stderr, "\n");
     #endif
+    if(newWord->primeList != NULL) {
+        fprintf(stderr, "Alloc Error\n");
+        exit(1);
+    }
     //Store trailing new word
     newWord->primeList = malloc(buffSize * sizeof(uint64_t));
     memcpy(newWord->primeList, buffer, sizeof(uint64_t) * buffSize);
     newWord->nbPrime = buffSize;
     finalSet->size++;
 
+    free(buffer);
     destroySet(targetSet);
 
     #ifdef DEBUG

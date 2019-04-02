@@ -32,4 +32,8 @@ int constructFilePath(char *fileLocation, char *includedFileList, char *fileExte
 int dichotomicSearch(int64word_t *list, int listLength, uint64_t value);
 void rankSetQ(integerSet_t *set);
 void copyWordInto(int64word_t *sourceOne, int64word_t *sourceTwo, int64word_t *target);
+void sortWordPrimeList(int64word_t *word);
+int uint64_compare (const void * a, const void * b);
+void tidySet(integerSet_t *oriSet);
+
 #endif

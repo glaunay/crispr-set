@@ -85,6 +85,16 @@ int constructFilePath(char *dirLocation, char *fileName, char *fileExtension, ch
     return v;
 }
 
+void freeFilePath(char **includedFileList, int inCnt, char **notIncludedFileList, int notInCnt) {
+    int i;
+    for (i = 0; i < inCnt ; i++)
+        free(includedFileList[i]);
+    free(includedFileList);
+    for (i = 0; i < notInCnt ; i++)
+        free(notIncludedFileList[i]);
+    free(notIncludedFileList);
+}
+   
 
 int main (int argc, char *argv[]) {
 
@@ -237,7 +247,7 @@ int main (int argc, char *argv[]) {
         moveSet(bufferSet, mainSet);
         otherSet = destroySet(otherSet);  
         free(filePath);
-        
+
         #ifdef DEBUG
             printf("Current intersection set\n");
             setPrint(mainSet, stdout);
@@ -264,6 +274,11 @@ int main (int argc, char *argv[]) {
             printf("[notin] Reading file[%d] :%s\n", s, filePath);
         #endif  
         otherSet  = newSetFromFile(filePath);
+         if(doProject) {
+            _otherSet = otherSet;
+            otherSet = project(_otherSet, iSuffLength, jSuffLength, 4) ;
+            destroySet(_otherSet);  
+        }   
         bufferSet = setSubstract(mainSet, otherSet);
         moveSet(bufferSet, mainSet);
         destroySet(otherSet);
@@ -289,15 +304,26 @@ int main (int argc, char *argv[]) {
 #ifdef DEBUG  
     fprintf(stderr, "Trying to rank %d\n", mainSet->size);
 #endif    
-    /*
-    rankCell_t *rankList = rankSet(mainSet);
-    fprintf(stderr, "Ranked");
-    printRankedList(rankList, fpOut);
-    */
+    
     rankSetQ(mainSet);
+    if(doProject)
+        tidySet(mainSet);
+
     setPrint(mainSet, fpOut);
     fclose(fpOut);
-  
+    
+    //Cleaning
     destroySet(mainSet);
+    freeFilePath(includedFileList, inCnt, notIncludedFileList, notInCnt);
+    if (fileLocation != NULL)
+        free(fileLocation);
+    if (fileExtension != NULL)
+        free(fileExtension);
+    if (fileOut != NULL)
+        free(fileOut);
+    if (fileSeedPath != NULL)
+        free(fileSeedPath);
+    
+
     return 0;
 }
