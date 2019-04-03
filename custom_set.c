@@ -322,10 +322,23 @@ void tidySet(integerSet_t *oriSet) {
     int64word_t *cWord;
     uint64_t prevPrime, currPrime;
     int count;
+	//int x;
     for (iWord = 0; iWord < oriSet->size; iWord++) {
         cWord = &(oriSet->data[iWord]);
+      /*  
+        printf("cWord prime List\n");
+        for(x =0; x < cWord->nbPrime ; x++)
+		    printf(" %lld ", cWord->primeList[x]); 
+ 	    printf("\n");
+        */
         sortWordPrimeList(cWord);
-        primeBuffer = malloc(cWord->nbPrime * sizeof(uint64_t));
+	    /*
+        printf(">TD:");
+	    for(x =0; x < cWord->nbPrime ; x++)
+		    printf(" %lld ", cWord->primeList[x]); 
+ 	    printf("\n");
+*/
+	primeBuffer = malloc(cWord->nbPrime * sizeof(uint64_t));
         
         prevPrime = cWord->primeList[0];
         primeBuffer[0] = prevPrime;
@@ -347,14 +360,34 @@ void tidySet(integerSet_t *oriSet) {
 
 
 void sortWordPrimeList(int64word_t *word) {
+  /*  int i;
+    printf("sorting %d elem: ", word->nbPrime);
+    for(i = 0 ; i < word->nbPrime; i++) {
+        printf("%lld ", word->primeList[i]);
+    }
+    printf("\n");*/
     qsort (word->primeList, word->nbPrime, sizeof(uint64_t), uint64_compare);
+  /*  printf("should be sorted now\n");
+    for(i = 0 ; i < word->nbPrime; i++) {
+        printf("%lld ", word->primeList[i]);
+    }
+    printf("\n");*/
 }
 
 int uint64_compare (const void * a, const void * b)
 {
-    uint64_t* i0 = (uint64_t *) a;
-    uint64_t* i1 = (uint64_t *) b;
-    
+    uint64_t i0;
+    uint64_t i1;
+    i0 = *(uint64_t*)a;
+    i1 = *(uint64_t*)b;
+/*
+    int v;
+    if (i0 < i1) v = -1;
+    else if (i0 > i1) v = 1;
+    else v =0;
+    printf("%lld %lld v=%d\n", i0, i1, v);
+*/
+
     if (i0 < i1) return -1;
     if (i0 > i1) return 1;
     return 0;
