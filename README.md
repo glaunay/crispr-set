@@ -1,3 +1,43 @@
+# TOOLBOX to work with Kmer -- integer representation
+
+## (up to 32)k-mer 2bits encoding
+
+### Building and distributing the python module "twobits"
+
+#### Edit setup.py and MANIFEST.in
+[MANIFEST.in cheatsheet](https://packaging.python.org/guides/using-manifest-in/)
+
+#### Build & Test 
+
+```sh
+\rm -rf ./build twobits.so
+python setup.py build
+ln -s build/lib.macosx-10.9-x86_64-3.8/*so twobits.so
+python ./test.py
+```
+
+#### Create dist & upload
+
+```sh
+python setup.py sdist
+python -m twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
+```
+
+#### Usage example
+
+```python
+import twobits
+twobits.encode("GCAGTTTGTAGTCGAAGACGGTCTTCGCATCG")
+# returns 15252441178061577511
+twobits.decode(15252441178061577511, 32)
+# returns "GCAGTTTGTAGTCGAAGACGGTCTTCGCATCG"
+
+twobits.encode("AA")
+# Returns 0
+twobits.decode(0, 2)
+# Returns "AA"
+```
+
 ## Perform integer ensemble comparaisons
 
 #### DEVEL CL
