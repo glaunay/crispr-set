@@ -21,7 +21,7 @@ typedef struct {
 
 int constructFilePath(char *fileLocation, char *includedFileList, char *fileExtention, char **filePath);
 
-integerSet_t *newSetFromFile(char *filePath);
+integerSet_t *newSetFromFile(char *filePath, int *wLen, char codec[]);
 integerSet_t *newSetZeros(int newSetSize);
 void moveSet(integerSet_t *sourceSet, integerSet_t *targetSet );
 integerSet_t *destroySet(integerSet_t *set);

@@ -21,13 +21,10 @@ uint64_t encode(char *original, size_t *strLen) {
     assert(*strLen * 2 <= sizeof(uint64_t) * BITS_PER_BYTE);
 
     uint64_t result = 0;
-
+    
     for (size_t i = 0; i < *strLen; i++) {
-        
         result = (result << 2) | ((original[i] >> 1) & TWO_BIT_MASK);
-       // printf("[%d] %c,%d == %llu\n", i, original[i], original[i], result);
     }
-    //printf("%llu\n", result);
     return result;
 }
 
@@ -68,11 +65,61 @@ void decode(uint64_t encoded, char *decoded, bool rna_flag, size_t strLen) {
     }
 }
 
+// Setting bits to zero on the left side of the bit array
+uint64_t truncateBinaryLeft(uint64_t binaryWord, int lenFrom, int lenTo) {
+    assert(lenTo < lenFrom);
+    int offset = 64 - (lenFrom * 2); // left side of the array unused during encoding
+    offset += (lenFrom - lenTo) * 2; // left side of the array we want to drop
+#ifdef DEBUG
+    showbits(binaryWord);
+    printf("Offset is [%d] + %d \n", 64 - (lenFrom * 2), (lenFrom - lenTo) * 2);
+#endif
+    uint64_t result = binaryWord << offset;
+#ifdef DEBUG
+    showbits(result);
+    printf("Shifting right by %d\n",offset);
+#endif
+    result = result >> offset;
+#ifdef DEBUG    
+    showbits(result);
+#endif
+    return result;
+}
+
+// Setting bits to zero on the left side of the bit array
+void truncateBinaryLeft_bis(uint64_t binaryWord, int lenFrom, int lenTo, uint64_t *truncBinaryWord) {
+    assert(lenTo < lenFrom);
+    int offset = 64 - (lenFrom * 2); // left side of the array unused during encoding
+    offset += (lenFrom - lenTo) * 2; // left side of the array we want to drop
+#ifdef DEBUG
+    showbits(binaryWord);
+    printf("Offset is [%d] + %d \n", 64 - (lenFrom * 2), (lenFrom - lenTo) * 2);
+#endif
+    *truncBinaryWord = binaryWord << offset;
+#ifdef DEBUG
+    showbits(result);
+    printf("Shifting right by %d\n",offset);
+#endif
+    *truncBinaryWord = *truncBinaryWord >> offset;
+#ifdef DEBUG    
+    showbits(result);
+#endif
+
+}
+
+void showbits( uint64_t x )
+{
+    for (int i = (sizeof(uint64_t) * 8) - 1; i >= 0; i--)
+    {
+       putchar(x & (1ull << i) ? '1' : '0');
+    }
+    printf("\n");
+}
+
 bool IsBitSet(int b, int pos)
 {
    return (b & (1 << pos)) != 0;
 }
-
 
 uint8_t hammingDistance(uint64_t w1, uint64_t w2, size_t strLen) {
     uint64_t tmp;

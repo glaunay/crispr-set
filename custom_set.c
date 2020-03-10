@@ -272,7 +272,7 @@ integerSet_t *newSetZeros(int newSetSize) {
     return newSet;
 }
 
-integerSet_t *newSetFromFile(char *filePath) {
+integerSet_t *newSetFromFile(char *filePath, int *wLen, char codec[]) {
     FILE *fp = NULL;
     char * line = NULL;
     size_t len = 0;
@@ -293,8 +293,8 @@ integerSet_t *newSetFromFile(char *filePath) {
     while ((read = getline(&line, &len, fp)) != -1) {
         //printf("Retrieved line of length %zu:\n", read);
         if(total < 0) {
-            sscanf (line, "%d", &total);
-            newSet = newSetZeros(total);
+            sscanf (line, "# %d %d %s", &total, wLen, codec);
+            newSet = newSetZeros(total);           
             continue;
         }
 

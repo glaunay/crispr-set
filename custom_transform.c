@@ -8,8 +8,10 @@
 #include <string.h>
 #include "custom_set.h"
 #include "custom_transform.h"
+#include "two_bits_encoding.h"
 
-integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int base) {
+integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int base,
+                        uint64_t (*truncFn)(uint64_t, int, int, int) ){
     #ifdef DEBUG
         fprintf(stderr,"PROJECTING...\n");
         setPrint(fromSet, stderr);
@@ -28,7 +30,8 @@ integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int bas
             fprintf(stderr, "fromSet index %d\t%lld:%d\n", i, fromSet->data[i].value, fromSet->data[i].count);
         #endif
         targetSet->data[i].count = fromSet->data[i].count;
-        targetSet->data[i].value = customTruncate(fromSet->data[i].value, fromDim, targetDim, base);
+        //targetSet->data[i].value = customTruncate(fromSet->data[i].value, fromDim, targetDim, base);
+        targetSet->data[i].value = truncFn(fromSet->data[i].value, fromDim, targetDim, base);
         targetSet->data[i].nbPrime = 1;
         targetSet->data[i].primeList = malloc(sizeof(uint64_t));
         targetSet->data[i].primeList[0] = fromSet->data[i].value;
@@ -117,17 +120,23 @@ integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int bas
     return finalSet;
 }
 
-int64_t customTruncate(int64_t value, int sizeFrom, int sizeTo, int base) {
-    int64_t _value = value;
-    int64_t offset = 0;
-    int64_t w;
+// Mimic customTruncate interface to work w/ *fn 
+uint64_t truncateBinaryLeftWrapper(uint64_t value, int sizeFrom, int sizeTo, int _) {
+    uint64_t newValue = truncateBinaryLeft(value, sizeFrom, sizeTo);
+    return newValue;
+}
+
+uint64_t customTruncate(uint64_t value, int sizeFrom, int sizeTo, int base) {
+    uint64_t _value = value;
+    uint64_t offset = 0;
+    uint64_t w;
     int i;
-    int64_t cur;
+    uint64_t cur;
 #ifdef DEBUG
     fprintf(stderr,"Projecting value %lld from %dD to %dD\n", value, sizeFrom, sizeTo);
 #endif
     for(i = sizeFrom ; i >= sizeTo ; i--) {
-        cur = int64_exp((int64_t) base, (int64_t)i);
+        cur = int64_exp((uint64_t) base, (uint64_t)i);
         w       = value / cur; // Floor division
         offset += w     * cur;
         value   = value % cur;
@@ -138,9 +147,9 @@ int64_t customTruncate(int64_t value, int sizeFrom, int sizeTo, int base) {
     return _value - offset;
 }
 
-int64_t int64_exp( int64_t base, int64_t exponent) {
+uint64_t int64_exp( uint64_t base, uint64_t exponent) {
     int i;
-    int64_t value = 1;
+    uint64_t value = 1;
     for (i = 0; i < exponent; i++)
         value *= base;
     return value;
@@ -154,7 +163,6 @@ int compareByValue (const void * a, const void * b)
     if (w0->value > w1->value) return 1;
     return 0;
 }
-
 
 void rankSetByValue(integerSet_t *set) {
     qsort (set->data, set->size, sizeof(int64word_t), compareByValue);

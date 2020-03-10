@@ -1,12 +1,11 @@
 #include <Python.h>
 #include <stdbool.h>
+#include "two_bits_encoding.h"
 static PyObject *
 
 
 encode_module(PyObject *self, PyObject *args) {
-   
-    const char *queryString;
-    int sts;
+    char *queryString;
 
     if (!PyArg_ParseTuple(args, "s", &queryString)){
         return PyErr_Format(PyExc_TypeError, "Wrong input: expected py string object");
@@ -57,12 +56,35 @@ decode_module(PyObject *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
+static PyObject *
+truncate_module(PyObject *self, PyObject *args) {
+    int newWordLen, wordLen;
+    PyObject* input_obj;
+    if ( !PyArg_ParseTuple(args, "Oii", &input_obj, &wordLen, &newWordLen) ){
+            return PyErr_Format(PyExc_TypeError, "Wrong input: expected py object and and two integers");
+    }
+
+    unsigned long long input = PyLong_AsUnsignedLongLong(input_obj);
+    if(input == -1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        return PyErr_Format(PyExc_TypeError, "Parameter must be an unsigned integer type, but got %s", Py_TYPE
+        (input_obj)->tp_name);
+    }
+    uint64_t truncValue;
+    truncateBinaryLeft_bis(input, wordLen, newWordLen, &truncValue);
+    return Py_BuildValue("K", truncValue);
+}
+
+
+
 static PyMethodDef twoBitsMethods[] = {
     //...
     {"encode",  encode_module, METH_VARARGS,
      "Encode a ATCG string in a 2bit per char uint64"},
     {"decode",  decode_module, METH_VARARGS,
      "Decode a ATCG string from a 2bit per char uint64"},
+     {"truncate",  truncate_module, METH_VARARGS,
+     "truncate to left a ATCG string passed as a uint64"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

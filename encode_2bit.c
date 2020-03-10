@@ -110,19 +110,20 @@ void compareOneToFile(char *queryString, char *targetFile){
 
 int main(int argc, char *argv[]) {
     int c;
-    const char    *short_opt = "a:b:t:h";
+    const char    *short_opt = "a:b:t:c:h";
     struct option   long_opt[] =
     {
         {"help",                 no_argument, NULL, 'h'},
         {"sequenceA",            required_argument, NULL, 'a'},
         {"sequenceB",            required_argument, NULL, 'b'},
-        {"FileForsequencesB",            required_argument, NULL, 't'}
+        {"FileForsequencesB",            required_argument, NULL, 't'},        
+        {"Word length to truncate sequences",            required_argument, NULL, 'c'}
     };
     
     char *stringToEncodeQuery = NULL;
     char *stringToEncodeTarget = NULL;
     char *targetFile = NULL;
-
+    int truncLen = 0;  
     while((c = getopt_long(argc, argv, short_opt, long_opt, NULL)) != -1) {
         switch(c) {
             case -1:       /* no more arguments */
@@ -137,7 +138,9 @@ int main(int argc, char *argv[]) {
             case 't':                
                 targetFile = strdup(optarg);
                 break;
-   
+            case 'c':                
+                truncLen = atoi(optarg);
+                break;
         }
     }
     if (targetFile != NULL && stringToEncodeQuery !=  NULL) {       
@@ -158,6 +161,10 @@ int main(int argc, char *argv[]) {
     char string[BIG_ENOUGH];
     decode(binaryQuery, string, false, strLenQuery);
     printf("%s\n", string);
+    if (truncLen > 0) {
+        printf("Truncating in integer space, w/ an array of twobits of length size %d\n", truncLen);
+        uint64_t binaryQueryTrunc = truncate(binaryQuery, strLenQuery, truncLen);
+    }
 
     if (stringToEncodeTarget != NULL) {
         printf("Trying to encode \"%s\"\n", stringToEncodeTarget);

@@ -5,10 +5,10 @@ module1 = Extension('twobits',
 
 setup (name = 'twobits',
        author_email = 'pitooon@gmail.com',
-	version = '1.1',
+	version = '1.3',
        #define_macros = [('MAJOR_VERSION', '1'),
        #                              ('MINOR_VERSION', '0')],
-       description = 'Encodind/decoding k-mers in 2bits-per-base ',
+       description = 'Encodind/decoding/Truncating k-mers in 2bits-per-base ',
        include_dirs = ['./include'],
        ext_modules = [module1])
 

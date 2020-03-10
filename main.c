@@ -20,7 +20,7 @@
 #include "custom_rank.h"
 #include "custom_transform.h"
 #include <stdbool.h>
-
+#include <assert.h>
 
 char *strMemCopy(char *src) {
     char *target = malloc(strlen(src) * sizeof(char) + 1);
@@ -107,6 +107,7 @@ int main (int argc, char *argv[]) {
     int iSuffLength = 0;
     int jSuffLength = 0;
     bool doProject = false;
+    uint64_t (*truncFn)(uint64_t, int, int, int);
     char **includedFileList = NULL;
     char **notIncludedFileList = NULL;
     //int guestValue = 0;
@@ -119,13 +120,12 @@ int main (int argc, char *argv[]) {
     char *fileExtension = NULL; 
     char *fileOut = NULL;
     char *fileSeedPath = NULL;
-    
     FILE *fpOut = NULL;
+    char codec[1024];
     const char    *short_opt = "hi:o:l:v:e:f:s:d:c:";
     struct option   long_opt[] =
     {
-        {"help",                 no_argument, NULL, 'h'},
-        {"dom",            required_argument, NULL, 'd'},       
+        {"help",                 no_argument, NULL, 'h'},          
         {"codom",          required_argument, NULL, 'c'},       
         {"seed",           required_argument, NULL, 's'},       
         {"in",             required_argument, NULL, 'i'},
@@ -143,12 +143,6 @@ int main (int argc, char *argv[]) {
             case 0:        /* long options toggles */
             break;
 
-         /*   case 'v':
-                guestValue = atoi(optarg);
-                break;*/
-            case 'd':                
-                iSuffLength = atoi(optarg);
-                break;
             case 'c':                
                 jSuffLength = atoi(optarg);
                 break;
@@ -187,11 +181,9 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    if ( iSuffLength < jSuffLength  || iSuffLength * jSuffLength < 0 ||  iSuffLength + jSuffLength < 0) {
-        fprintf(stderr, "irregular suffix length");
-        exit(1);
-    }
-    doProject = iSuffLength > jSuffLength;
+
+
+
     
 
     #ifdef DEBUG
@@ -214,8 +206,25 @@ int main (int argc, char *argv[]) {
     }
 
     integerSet_t *_mainSet, *_otherSet;
-    integerSet_t *mainSet = newSetFromFile(filePath);
+    integerSet_t *mainSet = newSetFromFile(filePath, &iSuffLength, codec);
     free(filePath);
+    
+    #ifdef DEBUG
+    printf("CODEC INFO >%d %s<\n", iSuffLength, codec);
+    #endif
+    assert (strcmp(codec, "pow2") == 0 || strcmp(codec, "twobits")  == 0 );
+    truncFn = strcmp(codec, "pow2") == 0 ? &customTruncate : &truncateBinaryLeftWrapper;
+    
+    if (jSuffLength != 0) {
+
+        if ( iSuffLength < jSuffLength  || iSuffLength * jSuffLength < 0 ||  iSuffLength + jSuffLength < 0 ||
+            (iSuffLength + jSuffLength > 0  && iSuffLength * jSuffLength == 0)  // One defined on cli and not the other
+            ) {
+            fprintf(stderr, "irregular suffix length {from:%d, to:%d}\n", iSuffLength, jSuffLength);
+            exit(1);
+        }
+        doProject = true;
+    }
 
     #ifdef DEBUG
         printf("Initial Set Content\n");
@@ -224,20 +233,25 @@ int main (int argc, char *argv[]) {
 
     if (doProject) {
         _mainSet = mainSet;
-        mainSet = project(_mainSet, iSuffLength, jSuffLength, 4) ;
+        mainSet = project(_mainSet, iSuffLength, jSuffLength, 4, truncFn) ;
         destroySet(_mainSet);  
     }
-    
+  
+
     integerSet_t *otherSet, *bufferSet;
     for (int s = s_start; s < inCnt; s++) {
         n = constructFilePath(fileLocation, includedFileList[s], fileExtension, &filePath);    
         #ifdef DEBUG
             printf("[in] Reading file[%d] :%s\n", s, filePath);
-        #endif  
-        otherSet  = newSetFromFile(filePath);
+        #endif
+        int currSuffLength;
+        char currCodec[1024]; 
+        otherSet  = newSetFromFile(filePath, &currSuffLength, currCodec);
+        assert(strcmp(currCodec, codec) == 0);
+        assert(currSuffLength == iSuffLength);
         if(doProject) {
             _otherSet = otherSet;
-            otherSet = project(_otherSet, iSuffLength, jSuffLength, 4) ;
+            otherSet = project(_otherSet, iSuffLength, jSuffLength, 4, truncFn) ;
             destroySet(_otherSet);  
         }      
         #ifdef DEBUG
@@ -273,10 +287,10 @@ int main (int argc, char *argv[]) {
         #ifdef DEBUG
             printf("[notin] Reading file[%d] :%s\n", s, filePath);
         #endif  
-        otherSet  = newSetFromFile(filePath);
+        otherSet  = newSetFromFile(filePath, &iSuffLength, codec);
          if(doProject) {
             _otherSet = otherSet;
-            otherSet = project(_otherSet, iSuffLength, jSuffLength, 4) ;
+            otherSet = project(_otherSet, iSuffLength, jSuffLength, 4, truncFn) ;
             destroySet(_otherSet);  
         }   
         bufferSet = setSubstract(mainSet, otherSet);

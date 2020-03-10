@@ -8,10 +8,11 @@
 #include "custom_set.h"
 
 
-integerSet_t *project(integerSet_t *fromSet, int froDim, int targetDim, int base);
+integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int base,
+                        uint64_t (*truncFn)(uint64_t, int, int, int) );
 int compareByValue (const void * a, const void * b);
 void rankSetByValue(integerSet_t *set);
-int64_t customTruncate(int64_t value, int sizeFrom, int sizeTo, int base);
-int64_t int64_exp( int64_t base, int64_t exponent);
-
+uint64_t customTruncate(uint64_t value, int sizeFrom, int sizeTo, int base);
+uint64_t int64_exp( uint64_t base, uint64_t exponent);
+uint64_t truncateBinaryLeftWrapper(uint64_t value, int sizeFrom, int sizeTo, int _);
 #endif

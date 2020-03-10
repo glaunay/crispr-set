@@ -38,19 +38,26 @@ void compareOneToFile(char *queryString, char *targetFile){
 
 int main(int argc, char *argv[]) {
     int c;
-    const char    *short_opt = "a:b:t:h";
+    const char    *short_opt = "a:b:t:c:h";
     struct option   long_opt[] =
     {
         {"help",                 no_argument, NULL, 'h'},
         {"sequenceA",            required_argument, NULL, 'a'},
         {"sequenceB",            required_argument, NULL, 'b'},
-        {"FileForsequencesB",            required_argument, NULL, 't'}
+        {"FileForsequencesB",            required_argument, NULL, 't'},        
+        {"Word length to truncate sequences",            required_argument, NULL, 'c'}
     };
     
     char *stringToEncodeQuery = NULL;
     char *stringToEncodeTarget = NULL;
     char *targetFile = NULL;
+    int truncLen = 0; 
+    uint64_t binaryQueryTrunc, binaryTargetTrunc;
 
+    size_t strLenQuery = 0;
+    size_t strLenTarget = 0;
+    uint64_t binaryQuery, binaryTarget;
+ 
     while((c = getopt_long(argc, argv, short_opt, long_opt, NULL)) != -1) {
         switch(c) {
             case -1:       /* no more arguments */
@@ -65,7 +72,9 @@ int main(int argc, char *argv[]) {
             case 't':                
                 targetFile = strdup(optarg);
                 break;
-   
+            case 'c':                
+                truncLen = atoi(optarg);
+                break;
         }
     }
     if (targetFile != NULL && stringToEncodeQuery !=  NULL) {       
@@ -78,19 +87,29 @@ int main(int argc, char *argv[]) {
     //char *segment = "GCCGTGCTAAGCGTAACAACTTCAAATCCGCG";
 
     printf("Trying to encode \"%s\"\n", stringToEncodeQuery);
-    size_t strLenQuery;
-    uint64_t binaryQuery = encode(stringToEncodeQuery, &strLenQuery);
+    strLenQuery;
+    binaryQuery = encode(stringToEncodeQuery, &strLenQuery);
 
     printf("Encoded string of size %lu\n", strLenQuery);
+    showbits(binaryQuery);
     printf("%llu\n", binaryQuery);
     char string[BIG_ENOUGH];
     decode(binaryQuery, string, false, strLenQuery);
     printf("%s\n", string);
 
+    if (truncLen > 0) {
+       printf("Truncating target to %d characters\n", truncLen);
+        binaryQueryTrunc = truncateBinaryLeft   (binaryQuery, strLenQuery, truncLen);
+        printf("%llu\n", binaryQueryTrunc);
+        decode(binaryQueryTrunc, string, false, truncLen);
+        showbits(binaryQueryTrunc);
+        printf("%s\n", string);
+    }
+
+
     if (stringToEncodeTarget != NULL) {
         printf("Trying to encode \"%s\"\n", stringToEncodeTarget);
-        size_t strLenTarget;
-        uint64_t binaryTarget = encode(stringToEncodeTarget, &strLenTarget);
+        binaryTarget = encode(stringToEncodeTarget, &strLenTarget);
         assert(strLenTarget == strLenQuery);
         //printf("Encoded string of size %lu\n", strLenQuery);
         printf("%llu\n", binaryTarget);
@@ -101,6 +120,18 @@ int main(int argc, char *argv[]) {
         int d = hammingDistance(binaryQuery, binaryTarget, strLenQuery);
 
         printf("Counted %d missmatches\n", d);
+
+        if (truncLen > 0) {
+            printf("Truncating target to %d characters\n", truncLen);
+            binaryTargetTrunc = truncateBinaryLeft(binaryTarget, strLenQuery, truncLen);
+            printf("%llu\n", binaryTargetTrunc);
+            decode(binaryTargetTrunc, string, false, truncLen);
+            printf("%s\n", string);
+            // All zero passed truncature, strlenquery as total number of comp proves it
+            int d = hammingDistance(binaryQueryTrunc, binaryTargetTrunc, strLenQuery);
+            printf("Truncated::counted %d missmatches\n", d);
+        }
+
     }
 
     return 0;

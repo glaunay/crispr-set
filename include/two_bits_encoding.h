@@ -1,3 +1,7 @@
+//File: two_bits_encoding.h
+#ifndef TWO_BITS_ENCODING_H
+#define TWO_BITS_ENCODING_H
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,7 +10,7 @@
 #include <assert.h>
 
 
-#define TWO_BIT_MASK (3)
+#define TWO_BIT_MASK (3ULL)
 #define BITS_PER_BYTE (8)
 #define BIG_ENOUGH (1024)
 
@@ -26,5 +30,10 @@ T 84 01010|10|0  2
 uint64_t encode(char *original, size_t *strLen);
 void encode_bis(char *original, size_t *strLen, uint64_t *result);
 void decode(uint64_t encoded, char *decoded, bool rna_flag, size_t strLen);
+uint64_t truncateBinaryLeft(uint64_t binaryWord, int lenFrom, int lenTo);
+void truncateBinaryLeft_bis(uint64_t binaryWord, int lenFrom, int lenTo, uint64_t *truncBinaryWord);
 bool IsBitSet(int b, int pos);
 uint8_t hammingDistance(uint64_t w1, uint64_t w2, size_t strLen);
+void showbits( uint64_t x );
+
+#endif
