@@ -45,7 +45,7 @@ integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int bas
 #ifdef DEBUG
     fprintf(stderr,"Ranking this\n");
     setPrint(targetSet, stderr);
-#endif
+#endif    
     rankSetByValue(targetSet);
 #ifdef DEBUG
     fprintf(stderr,"into this\n");
@@ -53,8 +53,8 @@ integerSet_t *project(integerSet_t *fromSet, int fromDim, int targetDim, int bas
     fprintf(stderr,"Compressing above set\n");
 #endif
     // Now Compress it as finalSet
-
-    int buffSize = pow(base, fromDim - targetDim);
+    
+    uint64_t buffSize = pow(base, fromDim - targetDim);
     uint64_t *buffer = malloc(sizeof(uint64_t) * buffSize);
 
     integerSet_t *finalSet = newSetZeros(fromSet->size);

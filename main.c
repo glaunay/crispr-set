@@ -232,9 +232,9 @@ int main (int argc, char *argv[]) {
     #endif
 
     if (doProject) {
-        _mainSet = mainSet;
+        _mainSet = mainSet;     
         mainSet = project(_mainSet, iSuffLength, jSuffLength, 4, truncFn) ;
-        destroySet(_mainSet);  
+        destroySet(_mainSet);         
     }
   
 
@@ -312,9 +312,14 @@ int main (int argc, char *argv[]) {
     printf("-->%d\n", index);
 */
 
-
     fpOut = fopen(fileOut, "w");
-    fprintf(fpOut, "Final set (Intersect of %d sets) - (Union of %d sets)\n", inCnt, notInCnt);
+    fprintf(fpOut, "{ \"comments\" : \"Final set (Intersect of %d sets) - (Union of %d sets)\", ", inCnt, notInCnt);
+    fprintf(fpOut, "\"size\" : %d, \"codec\" : \"%s\", " , mainSet->size, codec );
+    if (doProject) 
+        fprintf(fpOut, "\"from\" : %d, \"to\" : %d }\n", iSuffLength, jSuffLength );
+    else
+        fprintf(fpOut, "\"length\" : %d }\n", iSuffLength);
+
 #ifdef DEBUG  
     fprintf(stderr, "Trying to rank %d\n", mainSet->size);
 #endif    
