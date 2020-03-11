@@ -171,12 +171,12 @@ int main (int argc, char *argv[]) {
                 return(0);
       //      case ':':
             case '?':
-                printf( "Try `%s --help' for more information.\n", argv[0]);
+                fprintf(stderr, "Try `%s --help' for more information.\n", argv[0]);
                 return(-2);
 
             default:
-                printf( "%s: invalid option -- %c\n", argv[0], c);
-                printf( "Try `%s --help' for more information.\n", argv[0]);
+                fprintf(stderr, "%s: invalid option -- %c\n", argv[0], c);
+                fprintf(stderr, "Try `%s --help' for more information.\n", argv[0]);
                 return(-2);
         }
     }
