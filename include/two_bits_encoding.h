@@ -14,7 +14,10 @@
 #define BITS_PER_BYTE (8)
 #define BIG_ENOUGH (1024)
 
-
+typedef struct binaryWord {
+    uint64_t value;
+    size_t len;
+} binaryWord_t;
 
 /*
 Much inspired from 
@@ -27,13 +30,13 @@ T 84 01010|10|0  2
 
 */
 
-uint64_t encode(char *original, size_t *strLen);
-void encode_bis(char *original, size_t *strLen, uint64_t *result);
-void decode(uint64_t encoded, char *decoded, bool rna_flag, size_t strLen);
-uint64_t truncateBinaryLeft(uint64_t binaryWord, int lenFrom, int lenTo);
-void truncateBinaryLeft_bis(uint64_t binaryWord, int lenFrom, int lenTo, uint64_t *truncBinaryWord);
+binaryWord_t encode(char *original/*, size_t *strLen*/);
+void encode_bis(char *original, binaryWord_t *result);
+void decode(binaryWord_t encoded, char *decoded, bool rna_flag);
+binaryWord_t truncateBinaryLeft(binaryWord_t binaryWord, int lenTo);
+void truncateBinaryLeft_bis(binaryWord_t binaryWord, int lenTo, binaryWord_t *truncBinaryWord);
 bool IsBitSet(int b, int pos);
-uint8_t hammingDistance(uint64_t w1, uint64_t w2, size_t strLen);
+uint8_t hammingDistance(binaryWord_t w1, binaryWord_t w2);
 void showbits( uint64_t x );
 
 #endif
