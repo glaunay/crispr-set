@@ -278,7 +278,7 @@ int main (int argc, char *argv[]) {
    
     for (int s = 0; s < notInCnt; s++) {
         if(mainSet->size == 0){
-            fprintf(stderr, "intersect size is zero, early exit\n");
+            fprintf(stdout, "intersect size is zero, early exit\n");
             break;
         }
             
